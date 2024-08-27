@@ -8,6 +8,11 @@ const Layout = () => {
         name="index"
         options={{ headerShown: false }} // Hide header if needed
       />
+      
+      <Stack.Screen
+        name="home/index"
+        options={{ headerShown: false }} // Hide header if needed
+      />
     </Stack>
   );
 };
