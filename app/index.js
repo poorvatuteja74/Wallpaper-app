@@ -1,8 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
+import { View, StyleSheet, Image, Pressable, Text } from 'react-native'; // Added Text import
 import { wp, hp } from '../helpers/common';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+import { theme } from '../constants/theme';
 
 const WelcomeScreen = () => {
   return (
@@ -12,10 +13,20 @@ const WelcomeScreen = () => {
         style={styles.bgImage}
         resizeMode='cover'
       />
-      {/* Linear gradient */}
+      
+      {/* Content */}
+      <View style={styles.contentContainer}>
+        <Text style={styles.titles}>PIXELS</Text>
+        <Text style={styles.punchline}>Perfectly Papered. Be is Style</Text>
+        <Pressable style={styles.startButton}>
+          <Text style={styles.startText}>Explore</Text>
+        </Pressable>
+      </View>
+
+      {/* Gradient and animation */}
       <Animated.View 
         entering={FadeInDown.duration(600)} 
-        style={{ flex: 1 }}
+        style={styles.gradientContainer}
       >
         <LinearGradient
           colors={['rgba(255,255,255,0)', 'white']}
@@ -38,11 +49,47 @@ const styles = StyleSheet.create({
     height: hp(100),
     position: 'absolute',
   },
-  gradient: {
-    width: wp(100),
-    height: hp(65), // Adjust this height based on how much of the screen you want the gradient to cover
+  gradientContainer: {
     position: 'absolute',
     bottom: 0,
+    width: wp(100),
+    height: hp(65), // Adjust this height based on how much of the screen you want the gradient to cover
+  },
+  gradient: {
+    flex: 1,
+  },
+  contentContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    gap: 14,
+    zIndex: 1, // Ensures content is above the gradient
+    marginBottom:30
+  },
+  titles: {
+    fontSize: hp(5),
+    
+    color: theme.colors.neutral(0.9),
+    fontWeight: theme.fontWeights.bold,
+  },
+  punchline: {
+    fontSize: hp(2),
+    letterSpacing: 1,
+    marginBottom: 10,
+    fontWeight: theme.fontWeights.bold,
+  },
+  startButton: {
+    marginBottom: 70,
+    backgroundColor: theme.colors.neutral(0.9),
+    padding: 10,
+    paddingHorizontal: 50,
+    borderRadius: theme.radius.xl,
+  },
+  startText: {
+    color: theme.colors.white,
+    fontSize: hp(3),
+    fontWeight: theme.fontWeights.medium,
+    letterSpacing: 1,
   },
 });
 
