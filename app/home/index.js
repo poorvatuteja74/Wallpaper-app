@@ -11,7 +11,14 @@ const HomeScreen = () => {
     const { top } = useSafeAreaInsets();
     const paddingTop = top > 0 ? top + 10 : 30;
     const [search, setSearch]= useState ('');
+    const [activeCategory, setActiveCategory] =useState(null);
     const searchInputRef = useRef(null)
+
+    const handleChangeCategory =(cat)=> {
+        setActiveCategory (cat)
+    }
+
+    console.log('active category:', activeCategory)
 
     return (
         <View style={[styles.container, { paddingTop }]}>
@@ -55,9 +62,14 @@ const HomeScreen = () => {
                     
                 </View>
 
-                <View style= {styles.categories}>
-                    <Categories/>
-                </View>
+                <View style={styles.categories}>
+                    <Categories 
+                    activeCategory={activeCategory} 
+                    handleChangeCategory={handleChangeCategory} 
+                    
+                    />
+                    </View>
+
             </ScrollView>
         </View>
     );
