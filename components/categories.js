@@ -37,7 +37,7 @@ const CategoryItem = ({ title, index, isActive, handleChangeCategory }) => {
   let backgroundColor = isActive ? theme.colors.neutral(0.8) : theme.colors.white;
 
   return (
-    <Animated.View entering={FadeInRight.delay(index * 200).duration(1000)}>
+    <Animated.View entering={FadeInRight.delay(index * 200).duration(1000).springify().damping(25)}>
       <Pressable
         onPress={() => {
           console.log('Pressed:', title); // Debugging log

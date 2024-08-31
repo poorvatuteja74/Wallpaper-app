@@ -1,28 +1,47 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { theme } from '../../constants/theme'; // Ensure correct path
-import { wp, hp } from '../../helpers/common'; // Ensure correct path
-import FontAwesome from '@expo/vector-icons/FontAwesome'; // Ensure correct import
-import { Feather, Ionicons } from '@expo/vector-icons'; // Ensure correct import
+import { theme } from '../../constants/theme';
+import { wp, hp } from '../../helpers/common';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { Feather, Ionicons } from '@expo/vector-icons';
 import Categories from '../../components/categories';
+import { apiCall } from '../../api';
+import ImageGrid from '../../components/imageGrid';
 
 const HomeScreen = () => {
     const { top } = useSafeAreaInsets();
     const paddingTop = top > 0 ? top + 10 : 30;
-    const [search, setSearch]= useState ('');
-    const [activeCategory, setActiveCategory] =useState(null);
-    const searchInputRef = useRef(null)
+    const [search, setSearch] = useState('');
+    const [images, setImages] = useState([]);
+    const [activeCategory, setActiveCategory] = useState(null);
+    const searchInputRef = useRef(null);
 
-    const handleChangeCategory =(cat)=> {
-        setActiveCategory (cat)
+    useEffect(() =>{
+        fetchImages();
+    },[]);
+
+    const fetchImages = async (params={page: 1}, append=true)=>{
+        let res =await apiCall(params);
+        if(res.success && res?.data?.hits){
+            if (append)
+                setImages([...images, ...res.data.hits])
+            else 
+                setImages([...res.data.hits])
+        }
     }
 
-    console.log('active category:', activeCategory)
+    const handleChangeCategory = (cat) => {
+        setActiveCategory(cat);
+    };
+
+    const clearSearch = () => {
+        setSearch('');
+        searchInputRef.current.clear(); // Clear the input field
+    };
 
     return (
         <View style={[styles.container, { paddingTop }]}>
-            {/* Header */}
             <View style={styles.header}>
                 <Pressable>
                     <Text style={styles.title}>Pixel</Text>
@@ -32,9 +51,7 @@ const HomeScreen = () => {
                 </Pressable>
             </View>
 
-            {/* ScrollView */}
             <ScrollView contentContainerStyle={{ gap: 15 }}>
-                {/* Search Bar */}
                 <View style={styles.searchBar}>
                     <View style={styles.searchIcon}>
                         <Feather name="search" size={24} color={theme.colors.neutral(0.4)} />
@@ -42,33 +59,27 @@ const HomeScreen = () => {
                     <TextInput
                         placeholder='Search for photos'
                         value={search}
-                        ref= {searchInputRef}
+                        ref={searchInputRef}
                         onChangeText={value => setSearch(value)}
                         style={styles.searchInput}
-                        placeholderTextColor={theme.colors.neutral(0.5)}
                     />
-
-                    {
-
-                        search && (
-
-                            <Pressable style={styles.closeIcon}>
-                        <Ionicons name="close" size={24} color={theme.colors.neutral(0.6)} />
-                    </Pressable>
-
-                        )
-                        
-                    }
-                    
+                    {search && (
+                        <Pressable style={styles.closeIcon} >
+                            <Ionicons name="close" size={24} color={theme.colors.neutral(0.6)} />
+                        </Pressable>
+                    )}
                 </View>
 
                 <View style={styles.categories}>
                     <Categories 
-                    activeCategory={activeCategory} 
-                    handleChangeCategory={handleChangeCategory} 
-                    
+                        activeCategory={activeCategory} 
+                        handleChangeCategory={handleChangeCategory} 
                     />
-                    </View>
+                </View>
+
+                <View>
+                    {images.length > 0 && <ImageGrid images={images} />}
+                </View>
 
             </ScrollView>
         </View>
@@ -78,7 +89,7 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        paddingBottom: 20, // To ensure space at the bottom of ScrollView
+        paddingBottom: 20,
     },
     header: {
         marginHorizontal: wp(4),
@@ -103,9 +114,6 @@ const styles = StyleSheet.create({
         padding: 6,
         borderRadius: theme.radius.lg,
         paddingLeft: 10,
-        // paddingHorizontal: 10,
-        // paddingVertical: 8,
-        
     },
     searchIcon: {
         padding: 10,
@@ -115,16 +123,14 @@ const styles = StyleSheet.create({
         borderRadius: theme.radius.sm,
         paddingVertical: 10,
         fontSize: hp(2),
-        // marginLeft: 10,
-        // paddingHorizontal: 12,  
-        // borderWidth: 1,
-        // borderColor: theme.colors.neutral(0.3),
-        
     },
     closeIcon: {
         backgroundColor: theme.colors.neutral(0.1),
         padding: 8,
         borderRadius: theme.radius.sm,
+    },
+    categories: {
+        marginBottom: 15,
     },
 });
 
