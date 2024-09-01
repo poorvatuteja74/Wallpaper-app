@@ -11,3 +11,15 @@ export const hp =percentage=> {
     const height = deviceHeight;
     return (percentage*height/100);
 }
+
+export const getColumnCount =()=>{
+
+    if (deviceWidth>=1024){
+        return 4;
+    } else if (deviceWidth>=768){
+        return 3;
+    }
+    else {
+        return 2;
+    }
+}
