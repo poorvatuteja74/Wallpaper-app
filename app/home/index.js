@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../../constants/theme';
@@ -8,6 +8,8 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import Categories from '../../components/categories';
 import { apiCall } from '../../api';
 import ImageGrid from '../../components/imageGrid';
+import {debounce} from 'lodash'
+var page= 1;
 
 const HomeScreen = () => {
     const { top } = useSafeAreaInsets();
@@ -21,7 +23,8 @@ const HomeScreen = () => {
         fetchImages();
     },[]);
 
-    const fetchImages = async (params={page: 1}, append=true)=>{
+    const fetchImages = async (params={page: 1}, append=false)=>{
+        console.log('params:', params, append);
         let res =await apiCall(params);
         if(res.success && res?.data?.hits){
             if (append)
@@ -34,6 +37,24 @@ const HomeScreen = () => {
     const handleChangeCategory = (cat) => {
         setActiveCategory(cat);
     };
+
+    const handleSerch = (text)=>{
+        setSearch(text);
+        if (text.length>2){
+            page=1;
+            setImages([]);
+            fetchImages({page, q:text});
+        }
+
+        if(text==""){
+
+            page=1;
+            setImages([]);
+            fetchImages({page});
+        }
+    }
+
+    const handleTextDebounce = useCallback(debounce(handleSerch, 400, []))
 
     const clearSearch = () => {
         setSearch('');
@@ -58,9 +79,9 @@ const HomeScreen = () => {
                     </View>
                     <TextInput
                         placeholder='Search for photos'
-                        value={search}
+                        // value={search}
                         ref={searchInputRef}
-                        onChangeText={value => setSearch(value)}
+                        onChangeText={handleTextDebounce}
                         style={styles.searchInput}
                     />
                     {search && (
