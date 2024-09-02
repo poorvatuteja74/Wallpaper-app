@@ -8,8 +8,9 @@ import { Feather, Ionicons } from '@expo/vector-icons';
 import Categories from '../../components/categories';
 import { apiCall } from '../../api';
 import ImageGrid from '../../components/imageGrid';
-import {debounce} from 'lodash'
-var page= 1;
+import { debounce } from 'lodash';
+
+let page = 1;
 
 const HomeScreen = () => {
     const { top } = useSafeAreaInsets();
@@ -19,46 +20,60 @@ const HomeScreen = () => {
     const [activeCategory, setActiveCategory] = useState(null);
     const searchInputRef = useRef(null);
 
-    useEffect(() =>{
+    useEffect(() => {
         fetchImages();
-    },[]);
+    }, []);
 
-    const fetchImages = async (params={page: 1}, append=false)=>{
+    const fetchImages = async (params = { page: 1 }, append = false) => {
         console.log('params:', params, append);
-        let res =await apiCall(params);
-        if(res.success && res?.data?.hits){
+        let res = await apiCall(params);
+        if (res.success && res?.data?.hits) {
             if (append)
-                setImages([...images, ...res.data.hits])
+                setImages(prevImages => [...prevImages, ...res.data.hits]);
             else 
-                setImages([...res.data.hits])
+                setImages(res.data.hits);
         }
-    }
+    };
 
     const handleChangeCategory = (cat) => {
         setActiveCategory(cat);
+        page = 1;
+        setImages([]);
+        fetchImages({ page, category: cat });
     };
 
-    const handleSerch = (text)=>{
+    const handleSearch = (text) => {
         setSearch(text);
-        if (text.length>2){
-            page=1;
+        if (text.length > 2) {
+            page = 1;
             setImages([]);
-            fetchImages({page, q:text});
+            fetchImages({ page, q: text });
         }
 
-        if(text==""){
-
-            page=1;
+        if (text === "") {
+            page = 1;
             setImages([]);
-            fetchImages({page});
+            fetchImages({ page });
         }
-    }
+    };
 
-    const handleTextDebounce = useCallback(debounce(handleSerch, 400, []))
+    // Debounce the handleSearch function
+    const handleTextDebounce = useCallback(
+        debounce((text) => handleSearch(text), 400), 
+        []
+    );
+
+    const onSearchChange = (text) => {
+        setSearch(text);
+        handleTextDebounce(text);
+    };
 
     const clearSearch = () => {
         setSearch('');
-        searchInputRef.current.clear(); // Clear the input field
+        searchInputRef.current?.clear();
+        page = 1;
+        setImages([]);
+        fetchImages({ page });
     };
 
     return (
@@ -79,13 +94,13 @@ const HomeScreen = () => {
                     </View>
                     <TextInput
                         placeholder='Search for photos'
-                        // value={search}
+                        value={search}
                         ref={searchInputRef}
-                        onChangeText={handleTextDebounce}
+                        onChangeText={onSearchChange}
                         style={styles.searchInput}
                     />
                     {search && (
-                        <Pressable style={styles.closeIcon} >
+                        <Pressable onPress={clearSearch} style={styles.closeIcon}>
                             <Ionicons name="close" size={24} color={theme.colors.neutral(0.6)} />
                         </Pressable>
                     )}
@@ -101,7 +116,6 @@ const HomeScreen = () => {
                 <View>
                     {images.length > 0 && <ImageGrid images={images} />}
                 </View>
-
             </ScrollView>
         </View>
     );
