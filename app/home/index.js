@@ -25,21 +25,36 @@ const HomeScreen = () => {
     }, []);
 
     const fetchImages = async (params = { page: 1 }, append = false) => {
-        console.log('params:', params, append);
-        let res = await apiCall(params);
-        if (res.success && res?.data?.hits) {
-            if (append)
-                setImages(prevImages => [...prevImages, ...res.data.hits]);
-            else 
-                setImages(res.data.hits);
+        try {
+            console.log('Fetching images with params:', params);
+            let res = await apiCall(params);
+            console.log('API response:', res);
+
+            if (res.success && res?.data?.hits) {
+                if (append) {
+                    setImages(prevImages => [...prevImages, ...res.data.hits]);
+                } else {
+                    setImages(res.data.hits);
+                }
+            } else {
+                setImages([]); // Clear images if API call fails or returns no hits
+            }
+        } catch (error) {
+            console.error('Error fetching images:', error);
+            setImages([]); // Clear images if an error occurs
         }
     };
 
-    const handleChangeCategory = (cat) => {
-        setActiveCategory(cat);
+    const handleChangeCategory = (category) => {
+        console.log('Selected category:', category);
+        setActiveCategory(category);
+        clearSearch(); // Clear search when category is changed
+        setImages([]); // Clear current images
         page = 1;
-        setImages([]);
-        fetchImages({ page, category: cat });
+        let params = { page };
+        if (category) params.category = category; // Add category to params
+        console.log('Params being sent:', params);
+        fetchImages(params, false); // Fetch images with the selected category
     };
 
     const handleSearch = (text) => {
@@ -47,19 +62,20 @@ const HomeScreen = () => {
         if (text.length > 2) {
             page = 1;
             setImages([]);
-            fetchImages({ page, q: text });
+            setActiveCategory(null);
+            fetchImages({ page, q: text }, false);
         }
 
         if (text === "") {
             page = 1;
             setImages([]);
-            fetchImages({ page });
+            fetchImages({ page, category: activeCategory }, false);
         }
     };
 
     // Debounce the handleSearch function
     const handleTextDebounce = useCallback(
-        debounce((text) => handleSearch(text), 400), 
+        debounce((text) => handleSearch(text), 400),
         []
     );
 
@@ -73,7 +89,7 @@ const HomeScreen = () => {
         searchInputRef.current?.clear();
         page = 1;
         setImages([]);
-        fetchImages({ page });
+        fetchImages({ page, category: activeCategory });
     };
 
     return (
@@ -115,6 +131,9 @@ const HomeScreen = () => {
 
                 <View>
                     {images.length > 0 && <ImageGrid images={images} />}
+                    {images.length === 0 && (
+                        <Text style={styles.noImagesText}>No images found.</Text>
+                    )}
                 </View>
             </ScrollView>
         </View>
@@ -166,6 +185,12 @@ const styles = StyleSheet.create({
     },
     categories: {
         marginBottom: 15,
+    },
+    noImagesText: {
+        textAlign: 'center',
+        fontSize: hp(2),
+        color: theme.colors.neutral(0.6),
+        marginTop: 20,
     },
 });
 

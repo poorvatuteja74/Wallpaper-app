@@ -5,14 +5,7 @@ import { wp, hp } from '../helpers/common';
 import { theme } from '../constants/theme';
 import Animated, { FadeInRight } from 'react-native-reanimated';
 
-const Categories = () => {
-  const [activeCategory, setActiveCategory] = useState(null);
-
-  const handleChangeCategory = (category) => {
-    console.log('Selected Category:', category); // Debugging log
-    setActiveCategory(category);
-  };
-
+const Categories = ({ activeCategory, handleChangeCategory }) => {
   return (
     <FlatList
       horizontal
