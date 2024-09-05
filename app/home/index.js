@@ -9,6 +9,7 @@ import Categories from '../../components/categories';
 import { apiCall } from '../../api';
 import ImageGrid from '../../components/imageGrid';
 import { debounce } from 'lodash';
+import FiltersModal from '../../components/filtersModal';
 
 let page = 1;
 
@@ -19,6 +20,7 @@ const HomeScreen = () => {
     const [images, setImages] = useState([]);
     const [activeCategory, setActiveCategory] = useState(null);
     const searchInputRef = useRef(null);
+    const modalRef = useRef(null);
 
     useEffect(() => {
         fetchImages();
@@ -44,6 +46,14 @@ const HomeScreen = () => {
             setImages([]); // Clear images if an error occurs
         }
     };
+
+    const openFiltersModal = () => {
+        modalRef?.current?.present();
+    }
+
+    const closeFiltersModal = () => {
+        modalRef?.current?.close();
+    }
 
     const handleChangeCategory = (category) => {
         console.log('Selected category:', category);
@@ -98,7 +108,7 @@ const HomeScreen = () => {
                 <Pressable>
                     <Text style={styles.title}>Pixel</Text>
                 </Pressable>
-                <Pressable>
+                <Pressable onPress={openFiltersModal}>
                     <FontAwesome name="bars" size={20} color={theme.colors.neutral(0.7)} />
                 </Pressable>
             </View>
@@ -136,6 +146,7 @@ const HomeScreen = () => {
                     )}
                 </View>
             </ScrollView>
+            <FiltersModal modalRef={modalRef}/>
         </View>
     );
 };
