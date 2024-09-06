@@ -1,8 +1,23 @@
-import { Text, View, StyleSheet, Pressable } from "react-native";
-import { theme } from "../constants/theme";
-import { wp, hp, capitalize } from "../helpers/common";
+import React from 'react';
+import { Text, View, StyleSheet, Pressable } from 'react-native';
+import { theme } from '../constants/theme';
+import { wp, hp, capitalize } from '../helpers/common';
+
+export const SectionView = ({ title, content }) => (
+    <View style={styles.sectionContainer}>
+        <Text style={styles.sectionTitle}>{title}</Text>
+        {content}
+    </View>
+);
+
+
 
 export const CommonFilterRow = ({ data, filterName, filters, setFilters }) => {
+
+    const onSelect = (item) => {
+        setFilters ({...filters, [filterName]: item})
+    } 
+
     return (
         <View style={styles.flexRowWrap}>
             {data && data.map((item) => {
@@ -12,12 +27,9 @@ export const CommonFilterRow = ({ data, filterName, filters, setFilters }) => {
 
                 return (
                     <Pressable
+                        onPress={() => onSelect(item)}
                         key={item}
                         style={[styles.outlinedButton, { backgroundColor }]}
-                        onPress={() => setFilters(prevFilters => ({
-                            ...prevFilters,
-                            [filterName]: isActive ? null : item
-                        }))}
                     >
                         <Text style={[styles.outlinedButtonText, { color }]}>
                             {capitalize(item)}
@@ -29,12 +41,6 @@ export const CommonFilterRow = ({ data, filterName, filters, setFilters }) => {
     );
 };
 
-export const SectionView = ({ title, content }) => (
-    <View style={styles.sectionContainer}>
-        <Text style={styles.sectionTitle}>{title}</Text>
-        {content}
-    </View>
-);
 
 const styles = StyleSheet.create({
     sectionContainer: {
