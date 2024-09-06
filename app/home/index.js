@@ -10,6 +10,7 @@ import { apiCall } from '../../api';
 import ImageGrid from '../../components/imageGrid';
 import { debounce } from 'lodash';
 import FiltersModal from '../../components/filtersModal';
+import { ActivityIndicator } from 'react-native';
 
 let page = 1;
 
@@ -17,7 +18,7 @@ const HomeScreen = () => {
     const { top } = useSafeAreaInsets();
     const paddingTop = top > 0 ? top + 10 : 30; 
     const [search, setSearch] = useState('');
-    const [filter, setFilter] = useState('null');
+    const [filters, setFilters] = useState('null');
     const [images, setImages] = useState([]);
     const [activeCategory, setActiveCategory] = useState(null);
     const searchInputRef = useRef(null);
@@ -57,13 +58,51 @@ const HomeScreen = () => {
     }
 
     const applyFilters = () => {
-        console.log ("reset  Filters");
+        if (filters) {
+            page = 1; // Changed comma to semicolon
+            setImages([]); // Changed comma to semicolon
+            let params = {
+                page,
+                ...filters,
+            };
+            if (activeCategory) params.category = activeCategory;
+            if (search) params.q = search;
+            fetchImages(params, false);
+        }
+        closeFiltersModal();
+    };
+    
+    const resetFilters = () => {
+        if (filters) {
+            page = 1; // Changed comma to semicolon
+            setFilters(null);
+            setImages([]); // Changed comma to semicolon
+            let params = {
+                page,
+            };
+            if (activeCategory) params.category = activeCategory;
+            if (search) params.q = search;
+            fetchImages(params, false);
+        }
         closeFiltersModal();
     }
 
-    const resetFilters = () => {
-        console.log ("applying Filters");
-        closeFiltersModal();
+    const clearThisFilter = (filterName) =>  {
+
+        let filterz=  {...filters};
+        delete filterz[filterName];
+        setFilters({...filterz});
+        page= 1;
+        setImages([]);
+        let params = {
+            page,
+            ...filterz
+        }
+        if (activeCategory) params.category = activeCategory;
+            if (search) params.q = search;
+            fetchImages(params, false);
+        
+
     }
 
     const handleChangeCategory = (category) => {
@@ -72,7 +111,7 @@ const HomeScreen = () => {
         clearSearch(); // Clear search when category is changed
         setImages([]); // Clear current images
         page = 1;
-        let params = { page };
+        let params = { page , ...filters};
         if (category) params.category = category; // Add category to params
         console.log('Params being sent:', params);
         fetchImages(params, false); // Fetch images with the selected category
@@ -84,13 +123,13 @@ const HomeScreen = () => {
             page = 1;
             setImages([]);
             setActiveCategory(null);
-            fetchImages({ page, q: text }, false);
+            fetchImages({ page, q: text, ...filters }, false);
         }
 
         if (text === "") {
             page = 1;
             setImages([]);
-            fetchImages({ page, category: activeCategory }, false);
+            fetchImages({ page, category: activeCategory, ...filters }, false);
         }
     };
 
@@ -113,6 +152,7 @@ const HomeScreen = () => {
         fetchImages({ page, category: activeCategory });
     };
 
+console.log ('filters : ', filters)
     return (
         <View style={[styles.container, { paddingTop }]}>
             <View style={styles.header}>
@@ -149,18 +189,51 @@ const HomeScreen = () => {
                         handleChangeCategory={handleChangeCategory} 
                     />
                 </View>
+                {
+                    filters && 
+                    <View>
+                        <ScrollView horizontal showsHorizontalScrollIndicator= {false} contentContainerStyle= {styles.filters}>
+                            {
+                                Object.keys(filters).map ((key, index) => {
+                                     return (
+                                        <View key={key} style ={styles.filterItems}>
+                                            {
+                                                key == "colors"? (
+                                                    <View style = {{
+                                                        height: 20,
+                                                        width: 30,
+                                                        borderRadius:7,
+                                                        backgroundColor: filters[key]
+                                                    }}/>
+                                                ): (<Text style ={styles.filterItemText}>{filters[key]}</Text>)  
+                                            }
+                                            
+                                            <Pressable style ={styles.filterCloseIcon} onPress={()=> clearThisFilter(key)}>
+                                            <Ionicons name="close" size={14} color={theme.colors.neutral(0.9)} /> 
+                                            </Pressable>
+                                        </View>
+                                     )
+                                })
+                            }
+                        </ScrollView>
+                    </View>
+                }
 
                 <View>
                     {images.length > 0 && <ImageGrid images={images} />}
-                    {images.length === 0 && (
+                    {/* {images.length === 0 && (
                         <Text style={styles.noImagesText}>No images found.</Text>
-                    )}
+                    )} */}
                 </View>
+                <View style={{ marginBottom: 70, marginTop: Array.isArray(images) && images.length > 0 ? 10 : 70 }}>
+                    <ActivityIndicator size="large" />
+                    </View>
+
             </ScrollView>
             <FiltersModal 
             modalRef={modalRef}
-            filter ={filter}
-            setFilter ={setFilter}
+            filters ={filters}
+            setFilters ={setFilters}
             onClose = {closeFiltersModal}
             onApply = {applyFilters}
             onReset = {resetFilters}
@@ -221,6 +294,29 @@ const styles = StyleSheet.create({
         color: theme.colors.neutral(0.6),
         marginTop: 20,
     },
+    filters: {
+        paddingHorizontal :wp(4),
+        gap: 10
+    },
+    filterItems : {
+        backgroundColor: theme.colors.grayBG,
+        padding: 3,
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderRadius: theme.radius.xs,
+        padding : 8,
+        gap: 10,
+        paddingHorizontal: 10, 
+    },
+    filterItemText: {
+        fontSize :hp (1.8),
+
+    },
+    closeIcon: {
+        backgroundColor :theme.colors.neutral(0.2),
+        padding:4,
+        borderRadius: 7
+    }
 });
 
 export default HomeScreen;

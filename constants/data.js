@@ -1,28 +1,28 @@
 const categories = [
     "backgrounds",
-     "fashion",
-     "nature", 
-     "science",
-     "education",
-     "feelings",
-     "health",
-     "people",
-     "religion",
-     "places",
-     "animals",
-     "industry",
-     "computer",
-     "food",
-     "sports",
-     "transportation",
-     "travel",
-     "buildings",
-     "business",
-     "music"
-    ];
+    "fashion",
+    "nature",
+    "science",
+    "education",
+    "feelings",
+    "health",
+    "people",
+    "religion",
+    "places",
+    "animals",
+    "industry",
+    "computer",
+    "food",
+    "sports",
+    "transportation",
+    "travel",
+    "buildings",
+    "business",
+    "music"
+];
 
 const filters = {
-    order: ["popular",  "latest"],
+    order: ["popular", "latest"],
     orientation: ["horizontal", "vertical"],
     type: ["photo", "illustration", "vector"],
     colors: [
@@ -38,8 +38,9 @@ const filters = {
         "brown",
         "white",
     ]
-}
+};
 
-    export const data ={
-        categories, filters
-    }
+export const data = {
+    categories,
+    filters
+};
