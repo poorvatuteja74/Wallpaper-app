@@ -59,12 +59,18 @@ const FiltersModal = ({
             );
           })}
           <View style={styles.button}>
-            <Pressable style={styles.resetButton} onPress={onReset}>
+            <Pressable style={styles.resetButton} onPress={() => {
+                console.log('Resetting filters:', filters);
+                onReset();
+            }}>
               <Text style={[styles.buttonText, { color: theme.colors.neutral(0.9) }]}>
                 Reset
               </Text>
             </Pressable>
-            <Pressable style={styles.applyButton} onPress={onApply}>
+            <Pressable style={styles.applyButton} onPress={() => {
+                console.log('Applying filters:', filters);
+                onApply();
+            }}>
               <Text style={[styles.buttonText, { color: theme.colors.white }]}>
                 Apply
               </Text>
@@ -94,7 +100,7 @@ const CustomBackdrop = ({ animatedIndex, style }) => {
 
   return (
     <Animated.View style={containerStyle}>
-      <BlurView style={StyleSheet.absoluteFill} tint="dark" intensity={25} />
+      <BlurView style={StyleSheet.absoluteFill} tint="dark" intensity={20} />
     </Animated.View>
   );
 };

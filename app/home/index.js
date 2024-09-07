@@ -23,12 +23,15 @@ const HomeScreen = () => {
     const [activeCategory, setActiveCategory] = useState(null);
     const searchInputRef = useRef(null);
     const modalRef = useRef(null);
+    const scrollRef = useRef(null);
+    const [isEndReached , setIsEndReached] = useState(false);
+
 
     useEffect(() => {
         fetchImages();
     }, []);
 
-    const fetchImages = async (params = { page: 1 }, append = false) => {
+    const fetchImages = async (params = { page: 1 }, append = true) => {
         try {
             console.log('Fetching images with params:', params);
             let res = await apiCall(params);
@@ -132,6 +135,43 @@ const HomeScreen = () => {
             fetchImages({ page, category: activeCategory, ...filters }, false);
         }
     };
+ 
+    const handleScroll =(event) =>{
+        const contentHeight = event.nativeEvent.contentSize.height; 
+        const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
+        const scrollOffset = event.nativeEvent.contentOffset.y;
+        const bottomHeight = contentHeight- scrollViewHeight;
+
+        if (scrollOffset >= bottomHeight - 1){
+
+            if (!isEndReached){
+                setIsEndReached(true);
+                console.log ("REACHED THE END")
+                ++page;
+
+                let params= {
+                    page, 
+                    ...filters
+
+                }
+
+                if (activeCategory) params.category = activeCategory;
+                if (search) params.q = search;
+                fetchImages(params);
+
+            }
+            
+        }else if (isEndReached) {
+            setIsEndReached(false); 
+        }
+    }
+
+    const handleScrollUp =() =>{
+        scrollRef?.current?.scrollTo ({
+            y:0,
+            animated: true
+        })
+    }
 
     // Debounce the handleSearch function
     const handleTextDebounce = useCallback(
@@ -156,7 +196,7 @@ console.log ('filters : ', filters)
     return (
         <View style={[styles.container, { paddingTop }]}>
             <View style={styles.header}>
-                <Pressable>
+                <Pressable onPress={handleScrollUp}>
                     <Text style={styles.title}>Pixel</Text>
                 </Pressable>
                 <Pressable onPress={openFiltersModal}>
@@ -164,7 +204,12 @@ console.log ('filters : ', filters)
                 </Pressable>
             </View>
 
-            <ScrollView contentContainerStyle={{ gap: 15 }}>
+            <ScrollView 
+
+            onScroll={handleScroll}
+            scrollEventThrottle={5}
+            ref= {scrollRef}
+            contentContainerStyle={{ gap: 15 }}>
                 <View style={styles.searchBar}>
                     <View style={styles.searchIcon}>
                         <Feather name="search" size={24} color={theme.colors.neutral(0.4)} />
