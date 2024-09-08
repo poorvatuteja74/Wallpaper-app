@@ -1,56 +1,133 @@
-import { View, Text, StyleSheet, Button, Platform } from 'react-native'
-import React, { useState } from 'react'
-import { BlurView } from 'expo-blur'
-import { wp } from '../../helpers/common'
-import { useLocalSearchParams, useRouter } from 'expo-router'
-import { Image } from 'expo-image'
-import { theme } from '../../constants/theme'
+import { View, Text, StyleSheet, ActivityIndicator, Pressable, Alert, Platform } from 'react-native';
+import React, { useState } from 'react';
+import { BlurView } from 'expo-blur';
+import { wp, hp } from '../../helpers/common';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Image } from 'expo-image';
+import { theme } from '../../constants/theme';
+import { Entypo, Octicons } from '@expo/vector-icons';
+import Animated, { FadeInDown } from 'react-native-reanimated';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
-const imageScreen = () => {
+const ImageScreen = () => {
   const router = useRouter();
   const item = useLocalSearchParams();
-  const [status, setStatus] = useState('');
-  let uri = item?.webformatURL;
+  const [status, setStatus] = useState('loading');
+  
+  const uri = item?.webformatURL;
+  const fileName = item?.previewURL?.split('/').pop();
+  const imageUrl = uri;
+  const filePath = `${FileSystem.documentDirectory}${fileName}`;
 
   const onLoad = () => {
-    setStatus('');
-  }
+    setStatus('loaded');
+  };
+
+  const handleDownloadImage = async () => {
+    setStatus('downloading');
+    try {
+      const downloadedUri = await downloadFile();
+      if (downloadedUri) {
+        console.log('Image downloaded to', downloadedUri);
+      }
+    } catch (error) {
+      console.error('Error downloading image:', error);
+      Alert.alert('Download Error', 'There was an issue downloading the image.');
+    } finally {
+      setStatus('idle');
+    }
+  };
+
+  const handleShareImage = async () => {
+    setStatus('sharing');
+    try {
+      const uri = await downloadFile();
+      if (uri) {
+        await Sharing.shareAsync(uri);
+      }
+    } catch (error) {
+      console.error('Error sharing image:', error);
+      Alert.alert('Share Error', 'There was an issue sharing the image.');
+    } finally {
+      setStatus('idle');
+    }
+  };
+
+  const downloadFile = async () => {
+    try {
+      const { uri } = await FileSystem.downloadAsync(imageUrl, filePath);
+      console.log('Finished downloading to', uri);
+      return uri;
+    } catch (err) {
+      console.error('Error downloading file:', err.message);
+      Alert.alert('Download Error', err.message);
+      return null;
+    }
+  };
 
   const getSize = () => {
     const aspectRatio = item?.imageWidth / item?.imageHeight;
-    const maxWidth = Platform.OS === 'web' ? wp(50) : wp(80); // Adjust mobile width to a larger value
-    let calculatedHeight = maxWidth / aspectRatio;
-    let calculatedWidth = maxWidth;
-
-    if (aspectRatio < 1) {
-      calculatedWidth = calculatedHeight * aspectRatio;
-    }
+    const maxWidth = Platform.OS === 'web' ? wp(50) : wp(80);
+    const calculatedHeight = maxWidth / aspectRatio;
+    const calculatedWidth = aspectRatio < 1 ? calculatedHeight * aspectRatio : maxWidth;
 
     return {
       width: calculatedWidth,
-      height: calculatedHeight
-    }
-  }
+      height: calculatedHeight,
+    };
+  };
 
-  console.log('image :', item);
   return (
-    <BlurView
-      style={styles.container}
-      tint='dark'
-      intensity={60}
-    >
-      <View style={[]}>
+    <BlurView style={styles.container} tint='dark' intensity={60}>
+      <View style={getSize()}>
+        {status === 'loading' && (
+          <View style={styles.loading}>
+            <ActivityIndicator size="large" color="white" />
+          </View>
+        )}
         <Image
           transition={100}
           style={[styles.image, getSize()]}
-          source={{ uri: uri }} // Wrap uri in an object
+          source={{ uri }}
           onLoad={onLoad}
         />
       </View>
-      <Button title="Back" onPress={() => router.back()} />
+
+      <View style={styles.buttons}>
+        <Animated.View entering={FadeInDown.springify()}>
+          <Pressable style={styles.button} onPress={() => router.back()}>
+            <Octicons name='x' size={24} color="white" />
+          </Pressable>
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.delay(100)}>
+          {status === 'downloading' ? (
+            <View style={styles.button}>
+              <ActivityIndicator size="small" color="white" />
+            </View>
+          ) : (
+            <Pressable style={styles.button} onPress={handleDownloadImage}>
+              <Octicons name='download' size={24} color="white" />
+            </Pressable>
+          )}
+        </Animated.View>
+
+        <Animated.View entering={FadeInDown.springify().delay(200)}>
+          {status === 'sharing' ? (
+            <View style={styles.button}>
+              <ActivityIndicator size="small" color="white" />
+            </View>
+          ) : (
+            <Pressable style={styles.button} onPress={handleShareImage}>
+              <Entypo name='share' size={22} color="white" />
+            </Pressable>
+          )}
+        </Animated.View>
+      </View>
     </BlurView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -58,14 +135,43 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: wp(4),
-    backgroundColor: 'rgba(0,0,0,0.5)' // Correct rgba syntax
+    backgroundColor: 'rgba(0,0,0,0.5)',
   },
   image: {
     borderRadius: theme.radius.lg,
     borderWidth: 2,
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderColor: 'rgba(255,255,255,0.1)',
-  }
-})
+  },
+  loading: {
+    position: 'absolute',
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttons: {
+    marginTop: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: wp(80), // Adjust width to fit button spacing
+    paddingHorizontal: wp(4),
+  },
+  button: {
+    height: hp(6),
+    width: hp(6),
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    borderRadius: theme.radius.lg,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.8,
+    shadowRadius: 2,
+    elevation: 5,
+    padding: hp(1),
+  },
+});
 
-export default imageScreen;
+export default ImageScreen;
