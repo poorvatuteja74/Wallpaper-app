@@ -4,8 +4,9 @@ import { Image } from 'expo-image'; // Ensure this import is correct for your us
 import { getImageSize } from '../helpers/common'; // Use the correct function from your helpers
 import { theme } from '../constants/theme';
 import { wp } from '../helpers/common';
+import { usePathname } from 'expo-router';
 
-const ImageCard = ({ item, index, column }) => {
+const ImageCard = ({ item, index, column, router }) => {
 
     const isLastInRow = () => {
         return (index + 1) % column === 0;
@@ -16,7 +17,7 @@ const ImageCard = ({ item, index, column }) => {
 
     return (
         <View style={[styles.container, !isLastInRow() && styles.spacing]}>
-            <Pressable style={styles.imageWrapper}>
+            <Pressable onPress={() => router.push({pathname :  'home/image', params: {...item}})} style={styles.imageWrapper}>
                 <Image
                     style={[styles.image, { height: imageSize }]} // Apply dynamic height here
                     source={{ uri: item?.webformatURL }} // Ensure correct property name and usage

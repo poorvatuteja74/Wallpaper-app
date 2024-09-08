@@ -11,6 +11,8 @@ import ImageGrid from '../../components/imageGrid';
 import { debounce } from 'lodash';
 import FiltersModal from '../../components/filtersModal';
 import { ActivityIndicator } from 'react-native';
+import { useRoute } from '@react-navigation/native';
+import { useRouter } from 'expo-router';
 
 let page = 1;
 
@@ -24,6 +26,7 @@ const HomeScreen = () => {
     const searchInputRef = useRef(null);
     const modalRef = useRef(null);
     const scrollRef = useRef(null);
+    const router = useRouter();
     const [isEndReached , setIsEndReached] = useState(false);
 
 
@@ -265,7 +268,7 @@ console.log ('filters : ', filters)
                 }
 
                 <View>
-                    {images.length > 0 && <ImageGrid images={images} />}
+                    {images.length > 0 && <ImageGrid images={images} router= {router}/>}
                     {/* {images.length === 0 && (
                         <Text style={styles.noImagesText}>No images found.</Text>
                     )} */}
