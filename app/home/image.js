@@ -26,32 +26,46 @@ const ImageScreen = () => {
   };
 
   const handleDownloadImage = async () => {
-    setStatus('downloading');
-    try {
-      const downloadedUri = await downloadFile();
-      if (downloadedUri) {
-        showToast('Image Downloaded');
+    if (Platform.OS === 'web') {
+      const anchor = document.createElement('a');
+      anchor.href = imageUrl;
+      anchor.target = "_blank";
+      anchor.download = fileName || 'download';
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+    } else {
+      setStatus('downloading');
+      try {
+        const downloadedUri = await downloadFile();
+        if (downloadedUri) {
+          showToast('Image Downloaded');
+        }
+      } catch (error) {
+        console.error('Error downloading image:', error);
+        Alert.alert('Download Error', 'There was an issue downloading the image.');
+      } finally {
+        setStatus('idle');
       }
-    } catch (error) {
-      console.error('Error downloading image:', error);
-      Alert.alert('Download Error', 'There was an issue downloading the image.');
-    } finally {
-      setStatus('idle');
     }
   };
 
   const handleShareImage = async () => {
-    setStatus('sharing');
-    try {
-      const uri = await downloadFile();
-      if (uri) {
-        await Sharing.shareAsync(uri);
+    if (Platform.OS === 'web') {
+      showToast('Link Copied');
+    } else {
+      setStatus('sharing');
+      try {
+        const uri = await downloadFile();
+        if (uri) {
+          await Sharing.shareAsync(uri);
+        }
+      } catch (error) {
+        console.error('Error sharing image:', error);
+        Alert.alert('Share Error', 'There was an issue sharing the image.');
+      } finally {
+        setStatus('idle');
       }
-    } catch (error) {
-      console.error('Error sharing image:', error);
-      Alert.alert('Share Error', 'There was an issue sharing the image.');
-    } finally {
-      setStatus('idle');
     }
   };
 
